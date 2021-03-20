@@ -53,7 +53,7 @@ int main (int argc, char **argv)
     uint8_t buffer[4096];
     while (1) {
         uint32_t length;
-        uint32_t unknown;
+        uint32_t mstimestamp;
         long int offset = ftell(in);
 
         size_t read = fread(&length, 4, 1, in);
@@ -73,8 +73,8 @@ int main (int argc, char **argv)
             return -1;
         }
 
-        // TODO: Figure this field out
-        fread(&unknown, 4, 1, in);
+        // Timestamp in ms
+        fread(&mstimestamp, 4, 1, in);
         // Read actual packet
         fread(buffer, length, 1, in);
 
@@ -86,8 +86,8 @@ int main (int argc, char **argv)
         }
 
         pcaprec_hdr_t packet_header;
-        packet_header.ts_sec = 0; // TODO: Set the timestamp to something useful
-        packet_header.ts_usec = 0;
+        packet_header.ts_sec = mstimestamp / 1000; // TODO: Set the timestamp to something useful
+        packet_header.ts_usec = (mstimestamp % 1000) * 1000;
         packet_header.incl_len = length;
         packet_header.orig_len = length;
         fwrite(&packet_header, sizeof(packet_header), 1, out);
